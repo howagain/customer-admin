@@ -1,0 +1,14 @@
+{
+  "name": "@automate-friday/customer-admin",
+  "version": "0.1.0",
+  "description": "Customer management dashboard for OpenClaw — shipped as a skill",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node src/server.mjs",
+    "dev": "node --watch src/server.mjs"
+  },
+  "dependencies": {
+    "express": "^4.21.0"
+  }
+}
