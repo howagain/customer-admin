@@ -5,7 +5,7 @@ export type { OpenClawConfig, TenantConfig, TenantChannelConfig, TenantToolPolic
 export { GatewayService, MockGatewayLayer, makeMockGatewayService } from "./services/GatewayService.js"
 export type { GatewayStatus } from "./services/GatewayService.js"
 
-export { StorageService, InMemoryStorageLayer, JsonFileStorageLayer } from "./services/StorageService.js"
+export { StorageService, InMemoryStorageLayer, JsonFileStorageLayer, makeInMemoryStorageService, makeJsonFileStorageService } from "./services/StorageService.js"
 
 export {
   listTenants,

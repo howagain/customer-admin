@@ -6,8 +6,6 @@ import {
   TenantAlreadyExistsError,
   ValidationError,
   type ConfigReadError,
-  type ConfigWriteError,
-  type GatewayError,
 } from "../errors/index.js"
 
 // --- Default safe tool deny list ---
@@ -57,7 +55,7 @@ const channelToTenant = (id: string, ch: TenantChannelConfig): TenantConfig => (
   users: ch.users ?? [],
   enabled: ch.enabled !== false,
   paid: ch.paid === true,
-  groupPolicy: (ch.groupPolicy as "allowlist" | "open") ?? "allowlist",
+  groupPolicy: ch.groupPolicy === "open" ? "open" : "allowlist",
 })
 
 const tenantToChannel = (tenant: Partial<TenantConfig>): TenantChannelConfig => ({

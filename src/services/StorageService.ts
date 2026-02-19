@@ -1,5 +1,5 @@
 import { Context, Effect, Layer } from "effect"
-import type { StorageReadError, StorageWriteError } from "../errors/index.js"
+import { StorageReadError, StorageWriteError } from "../errors/index.js"
 
 // --- Plugin interface for data persistence ---
 // JSON file for demo, Convex for prod — same interface
@@ -73,7 +73,7 @@ export const makeJsonFileStorageService = (filePath: string) => {
           const store = readStore()
           return (store[key] as T) ?? null
         },
-        catch: (e) => new (require("../errors/index.js").StorageReadError)({ key, cause: e }),
+        catch: (e) => new StorageReadError({ key, cause: e }),
       }),
 
     set: <T>(key: string, value: T) =>
@@ -83,7 +83,7 @@ export const makeJsonFileStorageService = (filePath: string) => {
           store[key] = value
           writeStore(store)
         },
-        catch: (e) => new (require("../errors/index.js").StorageWriteError)({ key, cause: e }),
+        catch: (e) => new StorageWriteError({ key, cause: e }),
       }),
 
     delete: (key: string) =>
@@ -93,7 +93,7 @@ export const makeJsonFileStorageService = (filePath: string) => {
           delete store[key]
           writeStore(store)
         },
-        catch: (e) => new (require("../errors/index.js").StorageWriteError)({ key, cause: e }),
+        catch: (e) => new StorageWriteError({ key, cause: e }),
       }),
 
     list: (prefix?: string) =>
@@ -102,7 +102,7 @@ export const makeJsonFileStorageService = (filePath: string) => {
           const store = readStore()
           return Object.keys(store).filter((k) => !prefix || k.startsWith(prefix))
         },
-        catch: (e) => new (require("../errors/index.js").StorageReadError)({ key: prefix ?? "*", cause: e }),
+        catch: (e) => new StorageReadError({ key: prefix ?? "*", cause: e }),
       }),
   })
 }

@@ -56,9 +56,10 @@ const makeTestLayer = (config: OpenClawConfig) => {
   return { layer, gatewayCalls: gw.calls }
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const runEffect = <A, E>(effect: Effect.Effect<A, E, any>, config: OpenClawConfig) => {
   const { layer, gatewayCalls } = makeTestLayer(config)
-  const provided = Effect.provide(effect, layer)
+  const provided = Effect.provide(effect, layer) as Effect.Effect<A, E, never>
   return { result: Effect.runSyncExit(provided), gatewayCalls }
 }
 

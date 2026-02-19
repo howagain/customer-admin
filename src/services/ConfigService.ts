@@ -37,7 +37,7 @@ export interface TenantChannelConfig {
   readonly users?: ReadonlyArray<string>
   readonly enabled?: boolean
   readonly paid?: boolean
-  readonly groupPolicy?: string
+  readonly groupPolicy?: "allowlist" | "open"
   readonly [key: string]: unknown
 }
 
@@ -80,6 +80,7 @@ export const InMemoryConfigLayer = (initial: OpenClawConfig) =>
 function deepMerge(target: Record<string, unknown>, source: Record<string, unknown>): Record<string, unknown> {
   const result = { ...target }
   for (const key of Object.keys(source)) {
+    if (key === "__proto__" || key === "constructor" || key === "prototype") continue
     const sv = source[key]
     const tv = target[key]
     if (sv && typeof sv === "object" && !Array.isArray(sv) && tv && typeof tv === "object" && !Array.isArray(tv)) {
