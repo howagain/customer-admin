@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Customer Admin</title>
+  <style>
+    :root {
+      --bg: #0f0f0f;
+      --card: #1a1a1a;
+      --border: #2a2a2a;
+      --text: #e0e0e0;
+      --text-muted: #888;
+      --accent: #6366f1;
+      --accent-hover: #818cf8;
+      --success: #22c55e;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --radius: 8px;
+    }
+    
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 16px;
+    }
+    
+    .container { max-width: 800px; margin: 0 auto; }
+    
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    
+    h1 {
+      font-size: 24px;
+      font-weight: 600;
+    }
+    
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+    
+    .status-active { background: rgba(34, 197, 94, 0.2); color: var(--success); }
+    .status-paused { background: rgba(245, 158, 11, 0.2); color: var(--warning); }
+    .status-unpaid { background: rgba(239, 68, 68, 0.2); color: var(--danger); }
+    
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 12px 20px;
+      min-height: 44px;
+      min-width: 44px;
+      border: none;
+      border-radius: var(--radius);
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    
+    .btn-primary {
+      background: var(--accent);
+      color: white;
+    }
+    .btn-primary:hover { background: var(--accent-hover); }
+    
+    .btn-secondary {
+      background: var(--card);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+    .btn-secondary:hover { background: var(--border); }
+    
+    .btn-danger {
+      background: rgba(239, 68, 68, 0.2);
+      color: var(--danger);
+    }
+    .btn-danger:hover { background: rgba(239, 68, 68, 0.3); }
+    
+    .btn-sm {
+      padding: 8px 12px;
+      font-size: 13px;
+    }
+    
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    
+    /* Customer List */
+    .customer-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    
+    .customer-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+    }
+    
+    .customer-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+      margin-bottom: 8px;
+    }
+    
+    .customer-name {
+      font-size: 16px;
+      font-weight: 600;
+    }
+    
+    .customer-channel {
+      font-size: 13px;
+      color: var(--text-muted);
+      font-family: monospace;
+    }
+    
+    .customer-prompt {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin: 12px 0;
+      padding: 8px;
+      background: var(--bg);
+      border-radius: 4px;
+      white-space: pre-wrap;
+      max-height: 60px;
+      overflow: hidden;
+    }
+    
+    .customer-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    
+    /* Empty State */
+    .empty-state {
+      text-align: center;
+      padding: 48px 24px;
+      color: var(--text-muted);
+    }
+    
+    .empty-state h2 {
+      font-size: 18px;
+      margin-bottom: 8px;
+      color: var(--text);
+    }
+    
+    /* Modal */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      z-index: 100;
+    }
+    
+    .modal {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      width: 100%;
+      max-width: 480px;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+    
+    .modal-header {
+      padding: 16px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .modal-header h2 {
+      font-size: 18px;
+      font-weight: 600;
+    }
+    
+    .modal-body {
+      padding: 16px;
+    }
+    
+    .modal-footer {
+      padding: 16px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      gap: 12px;
+      justify-content: flex-end;
+    }
+    
+    /* Form */
+    .form-group {
+      margin-bottom: 16px;
+    }
+    
+    .form-group label {
+      display: block;
+      font-size: 13px;
+      font-weight: 500;
+      margin-bottom: 6px;
+      color: var(--text-muted);
+    }
+    
+    .form-group input,
+    .form-group textarea {
+      width: 100%;
+      padding: 12px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--text);
+      font-size: 14px;
+      font-family: inherit;
+    }
+    
+    .form-group input:focus,
+    .form-group textarea:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+    
+    .form-group textarea {
+      resize: vertical;
+      min-height: 100px;
+    }
+    
+    .form-error {
+      color: var(--danger);
+      font-size: 12px;
+      margin-top: 4px;
+    }
+    
+    /* Toggle */
+    .toggle-group {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    
+    .toggle {
+      width: 48px;
+      height: 28px;
+      background: var(--border);
+      border-radius: 14px;
+      cursor: pointer;
+      position: relative;
+      transition: background 0.2s;
+    }
+    
+    .toggle.active {
+      background: var(--success);
+    }
+    
+    .toggle::after {
+      content: '';
+      position: absolute;
+      top: 3px;
+      left: 3px;
+      width: 22px;
+      height: 22px;
+      background: white;
+      border-radius: 50%;
+      transition: transform 0.2s;
+    }
+    
+    .toggle.active::after {
+      transform: translateX(20px);
+    }
+    
+    /* Toast */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--card);
+      border: 1px solid var(--border);
+      padding: 12px 20px;
+      border-radius: var(--radius);
+      font-size: 14px;
+      z-index: 200;
+      animation: slideUp 0.3s ease;
+    }
+    
+    .toast.success { border-color: var(--success); }
+    .toast.error { border-color: var(--danger); }
+    
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateX(-50%) translateY(20px); }
+      to { opacity: 1; transform: translateX(-50%) translateY(0); }
+    }
+    
+    /* Loading */
+    .loading {
+      display: flex;
+      justify-content: center;
+      padding: 48px;
+    }
+    
+    .spinner {
+      width: 32px;
+      height: 32px;
+      border: 3px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    
+    /* Hidden */
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>🛡️ Customer Admin</h1>
+      <button class="btn btn-primary" onclick="showAddModal()">+ Add Customer</button>
+    </header>
+    
+    <div id="loading" class="loading">
+      <div class="spinner"></div>
+    </div>
+    
+    <div id="empty-state" class="empty-state hidden">
+      <h2>No customers yet</h2>
+      <p>Add your first customer to get started</p>
+      <button class="btn btn-primary" style="margin-top: 16px" onclick="showAddModal()">+ Add Customer</button>
+    </div>
+    
+    <div id="customer-list" class="customer-list hidden"></div>
+  </div>
+  
+  <!-- Add/Edit Modal -->
+  <div id="modal" class="modal-backdrop hidden" onclick="closeModalOnBackdrop(event)">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 id="modal-title">Add Customer</h2>
+        <button class="btn btn-secondary btn-sm" onclick="closeModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <form id="customer-form" onsubmit="handleSubmit(event)">
+          <div class="form-group">
+            <label for="channel-name">Channel Name</label>
+            <input type="text" id="channel-name" placeholder="acme" autocomplete="off">
+            <div id="channel-error" class="form-error hidden"></div>
+            <div style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">
+              Will create <code>#client-<span id="channel-preview">name</span></code>
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label for="system-prompt">System Prompt</label>
+            <textarea id="system-prompt" placeholder="You are a helpful blog assistant for this customer..."></textarea>
+          </div>
+          
+          <div class="form-group">
+            <label>Status</label>
+            <div class="toggle-group">
+              <div id="toggle-enabled" class="toggle active" onclick="toggleEnabled()"></div>
+              <span id="toggle-label">Active</span>
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label>Paid</label>
+            <div class="toggle-group">
+              <div id="toggle-paid" class="toggle active" onclick="togglePaid()"></div>
+              <span id="toggle-paid-label">Paid</span>
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+        <button id="submit-btn" class="btn btn-primary" onclick="handleSubmit(event)">Save</button>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Confirm Delete Modal -->
+  <div id="confirm-modal" class="modal-backdrop hidden">
+    <div class="modal">
+      <div class="modal-header">
+        <h2>Remove Customer</h2>
+        <button class="btn btn-secondary btn-sm" onclick="closeConfirmModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <p id="confirm-message">Are you sure you want to remove this customer? The bot will stop responding in their channel.</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeConfirmModal()">Cancel</button>
+        <button id="confirm-btn" class="btn btn-danger" onclick="confirmDelete()">Remove</button>
+      </div>
+    </div>
+  </div>
+  
+  <div id="toast" class="toast hidden"></div>
+
+  <script>
+    // Config
+    const API_BASE = '';  // same origin
+    let authToken = new URLSearchParams(window.location.search).get('token') || localStorage.getItem('adminToken') || '';
+    
+    // State
+    let customers = [];
+    let editingCustomer = null;
+    let deletingCustomer = null;
+    let formEnabled = true;
+    let formPaid = true;
+    
+    // API helpers
+    async function api(method, path, body = null) {
+      const opts = {
+        method,
+        headers: {
+          'Authorization': `Bearer ${authToken}`,
+          'Content-Type': 'application/json',
+        },
+      };
+      if (body) opts.body = JSON.stringify(body);
+      
+      const resp = await fetch(`${API_BASE}${path}`, opts);
+      const data = await resp.json();
+      
+      if (!resp.ok) {
+        throw new Error(data.error || `HTTP ${resp.status}`);
+      }
+      return data;
+    }
+    
+    // Load customers
+    async function loadCustomers() {
+      document.getElementById('loading').classList.remove('hidden');
+      document.getElementById('customer-list').classList.add('hidden');
+      document.getElementById('empty-state').classList.add('hidden');
+      
+      try {
+        const data = await api('GET', '/api/customers');
+        customers = data.customers.filter(c => !c.raw?.deleted);
+        renderCustomers();
+      } catch (err) {
+        if (err.message.includes('Unauthorized')) {
+          promptForToken();
+        } else {
+          showToast('Failed to load customers: ' + err.message, 'error');
+        }
+      } finally {
+        document.getElementById('loading').classList.add('hidden');
+      }
+    }
+    
+    function promptForToken() {
+      const token = prompt('Enter admin token:');
+      if (token) {
+        authToken = token;
+        localStorage.setItem('adminToken', token);
+        loadCustomers();
+      }
+    }
+    
+    // Render
+    function renderCustomers() {
+      const list = document.getElementById('customer-list');
+      const empty = document.getElementById('empty-state');
+      
+      if (customers.length === 0) {
+        empty.classList.remove('hidden');
+        list.classList.add('hidden');
+        return;
+      }
+      
+      empty.classList.add('hidden');
+      list.classList.remove('hidden');
+      
+      list.innerHTML = customers.map(c => `
+        <div class="customer-card">
+          <div class="customer-header">
+            <div>
+              <div class="customer-name">${escapeHtml(c.displayName)}</div>
+              <div class="customer-channel">${escapeHtml(c.channelName)}</div>
+            </div>
+            <div style="display: flex; gap: 8px;">
+              ${c.enabled 
+                ? (c.paid 
+                    ? '<span class="status-badge status-active">● Active</span>'
+                    : '<span class="status-badge status-unpaid">● Unpaid</span>')
+                : '<span class="status-badge status-paused">● Paused</span>'}
+            </div>
+          </div>
+          ${c.systemPrompt ? `<div class="customer-prompt">${escapeHtml(c.systemPrompt)}</div>` : ''}
+          <div class="customer-actions">
+            <button class="btn btn-secondary btn-sm" onclick="showEditModal('${c.id}')">Edit</button>
+            ${c.enabled 
+              ? `<button class="btn btn-secondary btn-sm" onclick="pauseCustomer('${c.id}')">Pause</button>`
+              : `<button class="btn btn-secondary btn-sm" onclick="activateCustomer('${c.id}')">Activate</button>`}
+            <button class="btn btn-danger btn-sm" onclick="showDeleteConfirm('${c.id}')">Remove</button>
+          </div>
+        </div>
+      `).join('');
+    }
+    
+    function escapeHtml(str) {
+      const div = document.createElement('div');
+      div.textContent = str || '';
+      return div.innerHTML;
+    }
+    
+    // Modal handlers
+    function showAddModal() {
+      editingCustomer = null;
+      document.getElementById('modal-title').textContent = 'Add Customer';
+      document.getElementById('channel-name').value = '';
+      document.getElementById('channel-name').disabled = false;
+      document.getElementById('system-prompt').value = '';
+      formEnabled = true;
+      formPaid = true;
+      updateToggles();
+      document.getElementById('modal').classList.remove('hidden');
+      document.getElementById('channel-name').focus();
+    }
+    
+    function showEditModal(id) {
+      editingCustomer = customers.find(c => c.id === id);
+      if (!editingCustomer) return;
+      
+      document.getElementById('modal-title').textContent = 'Edit Customer';
+      document.getElementById('channel-name').value = editingCustomer.id.replace('client-', '');
+      document.getElementById('channel-name').disabled = true;
+      document.getElementById('system-prompt').value = editingCustomer.systemPrompt || '';
+      formEnabled = editingCustomer.enabled;
+      formPaid = editingCustomer.paid;
+      updateToggles();
+      document.getElementById('modal').classList.remove('hidden');
+    }
+    
+    function closeModal() {
+      document.getElementById('modal').classList.add('hidden');
+      editingCustomer = null;
+    }
+    
+    function closeModalOnBackdrop(e) {
+      if (e.target.classList.contains('modal-backdrop')) {
+        closeModal();
+      }
+    }
+    
+    function toggleEnabled() {
+      formEnabled = !formEnabled;
+      updateToggles();
+    }
+    
+    function togglePaid() {
+      formPaid = !formPaid;
+      updateToggles();
+    }
+    
+    function updateToggles() {
+      const enabledToggle = document.getElementById('toggle-enabled');
+      const enabledLabel = document.getElementById('toggle-label');
+      const paidToggle = document.getElementById('toggle-paid');
+      const paidLabel = document.getElementById('toggle-paid-label');
+      
+      if (formEnabled) {
+        enabledToggle.classList.add('active');
+        enabledLabel.textContent = 'Active';
+      } else {
+        enabledToggle.classList.remove('active');
+        enabledLabel.textContent = 'Paused';
+      }
+      
+      if (formPaid) {
+        paidToggle.classList.add('active');
+        paidLabel.textContent = 'Paid';
+      } else {
+        paidToggle.classList.remove('active');
+        paidLabel.textContent = 'Unpaid';
+      }
+    }
+    
+    // Channel name preview
+    document.getElementById('channel-name').addEventListener('input', (e) => {
+      const name = e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-');
+      document.getElementById('channel-preview').textContent = name || 'name';
+    });
+    
+    // Form submit
+    async function handleSubmit(e) {
+      e.preventDefault();
+      
+      const channelName = document.getElementById('channel-name').value.trim();
+      const systemPrompt = document.getElementById('system-prompt').value.trim();
+      
+      if (!editingCustomer && !channelName) {
+        document.getElementById('channel-error').textContent = 'Channel name is required';
+        document.getElementById('channel-error').classList.remove('hidden');
+        return;
+      }
+      
+      document.getElementById('channel-error').classList.add('hidden');
+      document.getElementById('submit-btn').disabled = true;
+      document.getElementById('submit-btn').textContent = 'Saving...';
+      
+      try {
+        if (editingCustomer) {
+          await api('PATCH', `/api/customers/${editingCustomer.id}`, {
+            systemPrompt,
+            enabled: formEnabled,
+            paid: formPaid,
+          });
+          showToast('Customer updated', 'success');
+        } else {
+          await api('POST', '/api/customers', {
+            channelName,
+            systemPrompt,
+            paid: formPaid,
+          });
+          showToast('Customer added — gateway restarting...', 'success');
+        }
+        
+        closeModal();
+        await loadCustomers();
+      } catch (err) {
+        if (err.message.includes('already exists')) {
+          document.getElementById('channel-error').textContent = 'Channel already exists';
+          document.getElementById('channel-error').classList.remove('hidden');
+        } else {
+          showToast('Error: ' + err.message, 'error');
+        }
+      } finally {
+        document.getElementById('submit-btn').disabled = false;
+        document.getElementById('submit-btn').textContent = 'Save';
+      }
+    }
+    
+    // Pause/Activate
+    async function pauseCustomer(id) {
+      try {
+        await api('POST', `/api/customers/${id}/pause`);
+        showToast('Customer paused', 'success');
+        await loadCustomers();
+      } catch (err) {
+        showToast('Error: ' + err.message, 'error');
+      }
+    }
+    
+    async function activateCustomer(id) {
+      try {
+        await api('POST', `/api/customers/${id}/activate`);
+        showToast('Customer activated', 'success');
+        await loadCustomers();
+      } catch (err) {
+        showToast('Error: ' + err.message, 'error');
+      }
+    }
+    
+    // Delete
+    function showDeleteConfirm(id) {
+      deletingCustomer = customers.find(c => c.id === id);
+      if (!deletingCustomer) return;
+      
+      document.getElementById('confirm-message').textContent = 
+        `Remove ${deletingCustomer.displayName}? The bot will stop responding in ${deletingCustomer.channelName}.`;
+      document.getElementById('confirm-modal').classList.remove('hidden');
+    }
+    
+    function closeConfirmModal() {
+      document.getElementById('confirm-modal').classList.add('hidden');
+      deletingCustomer = null;
+    }
+    
+    async function confirmDelete() {
+      if (!deletingCustomer) return;
+      
+      document.getElementById('confirm-btn').disabled = true;
+      document.getElementById('confirm-btn').textContent = 'Removing...';
+      
+      try {
+        await api('DELETE', `/api/customers/${deletingCustomer.id}`);
+        showToast('Customer removed', 'success');
+        closeConfirmModal();
+        await loadCustomers();
+      } catch (err) {
+        showToast('Error: ' + err.message, 'error');
+      } finally {
+        document.getElementById('confirm-btn').disabled = false;
+        document.getElementById('confirm-btn').textContent = 'Remove';
+      }
+    }
+    
+    // Toast
+    function showToast(message, type = 'success') {
+      const toast = document.getElementById('toast');
+      toast.textContent = message;
+      toast.className = `toast ${type}`;
+      toast.classList.remove('hidden');
+      
+      setTimeout(() => {
+        toast.classList.add('hidden');
+      }, 3000);
+    }
+    
+    // Init
+    loadCustomers();
+  </script>
+</body>
+</html>
