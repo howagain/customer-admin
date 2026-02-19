@@ -1,0 +1,87 @@
+name: CI — Playwright E2E & BDD Proof
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  playwright-e2e:
+    name: Playwright E2E Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Run Playwright tests
+        run: npx playwright test --reporter=html
+        env:
+          CI: true
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 14
+
+      - name: Upload videos & screenshots
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: proof-artifacts
+          path: |
+            test-results/
+          retention-days: 30
+
+  validate-specs:
+    name: Validate BDD specs
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check BDD feature files exist
+        run: |
+          if [ ! -d "specs" ] || [ -z "$(ls specs/*.feature 2>/dev/null)" ]; then
+            echo "❌ No .feature files found in specs/"
+            exit 1
+          fi
+          echo "✅ Found BDD specs:"
+          ls -la specs/*.feature
+
+      - name: Validate feature file syntax
+        run: |
+          for f in specs/*.feature; do
+            echo "Checking $f..."
+            # Basic Gherkin validation: must have Feature: and at least one Scenario:
+            if ! grep -q "^Feature:" "$f"; then
+              echo "❌ $f missing Feature: declaration"
+              exit 1
+            fi
+            if ! grep -q "Scenario:" "$f"; then
+              echo "❌ $f has no scenarios"
+              exit 1
+            fi
+            SCENARIOS=$(grep -c "Scenario:" "$f")
+            echo "  ✓ $f — $SCENARIOS scenarios"
+          done
+          echo "✅ All feature files valid"
